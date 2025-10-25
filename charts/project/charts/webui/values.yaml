@@ -10,7 +10,7 @@
 # Author: Abderaouf KHICHANE, Ilhem FAJJARI, Ayoub BOUSSELMI, Ian Chen
 # Software description: An open-source project providing Helm charts to deploy 5G components (Core + RAN) on top of Kubernetes
 #
-# Default values for free5gcControlPlane chart.
+# Default values for ControlPlane chart.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -49,7 +49,7 @@ initcontainers:
 
 db:
   enabled: false
-# This section can be used to override the default values in the MongoDB chart (remember MongoDB is a subchart of the free5gcControlplane chart since control plane NFs rely on it.
+# This section can be used to override the default values in the MongoDB chart (remember MongoDB is a subchart of the Controlplane chart since control plane NFs rely on it.
 mongodb:
   service:
     name: mongodb
