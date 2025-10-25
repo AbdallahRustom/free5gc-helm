@@ -1,0 +1,12 @@
+#
+# Software Name : helm
+#
+apiVersion: v2
+name: chf
+description: A Helm chart to deploy the CHF
+type: application
+version: 0.1.6
+appVersion: latest
+maintainers:
+- email: abdallah.r.waly@orange.com
+  name: Abdallah Rustom
