@@ -18,9 +18,9 @@ data:
       chfName: CHF # the name of this CHF
       sbi: # Service-based interface information
         scheme: {{ $.Values.global.sbi.scheme }} # the protocol for sbi (http or https)
-        registerIPv4: {{ include "chf.fullname" $ }}-service # IP used to register to NRF
+        registerIPv4: {{ include "chf.fullname" $ }}-service.{{ $.Release.Namespace }}.svc.cluster.local # IP used to register to NRF
         bindingIPv4: 0.0.0.0 # IP used to bind the service
-        fqdn: {{ include "chf.fullname" $ }}-service # FQDN of this CHF
+        fqdn: {{ include "chf.fullname" $ }}-service.{{ $.Release.Namespace }}.svc.cluster.local # FQDN of this CHF
         port: {{ .service.port }} # port used to bind the service
         mutalTls: {{ $.Values.global.sbi.mutalTls }}
         tls: # the local path of TLS key
