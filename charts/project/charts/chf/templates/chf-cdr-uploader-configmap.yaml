@@ -1,0 +1,14 @@
+{{- if and .Values.cdr.enabled .Values.cdr.uploader.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "chf.cdr.uploaderConfigMapName" . }}
+  labels:
+    {{- include "chf.labels" . | nindent 4 }}
+    app.kubernetes.io/component: cdr
+data:
+  uploader.sh: |-
+{{ (.Files.Get "files/uploader.sh") | nindent 4 }}
+  uploader.py: |-
+{{ (.Files.Get "files/uploader.py") | nindent 4 }}
+{{- end }}

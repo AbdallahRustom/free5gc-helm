@@ -37,9 +37,12 @@ chf:
   name: chf
   replicaCount: 1
   image:
-    name: myregistrydomain.com:5000/chf
-    tag: 1
+    name: myregistrydomain.com:5000/chf-nsf
+    tag: 9
     pullPolicy: Always
+  # environment: 
+  #   - name: CDR_DIR
+  #     value: /data/cdr/incoming
   service:
     type: ClusterIP
     port: 8080
@@ -49,6 +52,7 @@ chf:
     mount: /free5gc/config/
     tlsmount: /free5gc/config/TLS
     certmount: /free5gc/nrf-cert
+    # cdrmount: /data/cdr/
   podAnnotations: {}
     # additional annotations
   imagePullSecrets: []
@@ -128,3 +132,39 @@ initcontainers:
   busybox:
     image: busybox
     tag: "1.32.0"
+
+
+cdr:
+  enabled: true
+  basePath: /data/cdr
+  writerDir: /data/cdr/incoming
+
+  pvc:
+    create: true
+    name: ""                   # auto-name via helper
+    storageClassName: nfs-client   # CHANGE to your RWX class
+    size: 20Gi
+    accessModes:
+      - ReadWriteMany
+
+  uploader:
+    enabled: true
+    schedule: "*/5 * * * *"
+    minSizeBytes: "5242880"      # 5 MB
+    minAgeSeconds: "0"         # 5 minutes
+    quietSeconds: "30"           # 30 seconds
+    image:
+      repository: alpine
+      tag: "3.20"
+      pullPolicy: IfNotPresent
+    sftp:
+      host: 10.0.20.42  
+      port: 8654
+      remoteDir: /incoming/cdr
+      username: test 
+      auth:
+      #   username: test        
+      # #   password:    
+      # # knownHosts: |-
+      # #  
+        privatekey: ""

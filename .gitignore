@@ -1,0 +1,2 @@
+# ignore the SFTP key (and keep an optional placeholder)
+charts/project/charts/chf/files/id_ed25519

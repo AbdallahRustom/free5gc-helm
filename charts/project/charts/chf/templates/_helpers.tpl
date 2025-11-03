@@ -63,3 +63,16 @@ CHF Pod Annotations
 {{- end }}
 {{- end }}
 {{- end }}
+
+{{/* CDR resource names */}}
+{{- define "chf.cdr.pvcName" -}}
+{{- default (printf "%s-cdr-pvc" (include "chf.fullname" .)) .Values.cdr.pvc.name -}}
+{{- end }}
+
+{{- define "chf.cdr.secretName" -}}
+{{- printf "%s-sftp" (include "chf.fullname" .) -}}
+{{- end }}
+
+{{- define "chf.cdr.uploaderConfigMapName" -}}
+{{- printf "%s-cdr-uploader" (include "chf.fullname" .) -}}
+{{- end }}

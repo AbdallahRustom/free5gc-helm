@@ -69,11 +69,19 @@ spec:
         env:
           - name: GIN_MODE
             value: release
+        {{- if $.Values.cdr.enabled }}
+          - name: CDR_DIR
+            value: {{ $.Values.cdr.writerDir | quote }}
+        {{- end }}
         volumeMounts:
           - mountPath: {{ .volume.mount }}
             name: {{ include "chf.fullname" $ }}-volume
           - mountPath: {{ .volume.tlsmount }}
             name: {{ include "chf.fullname" $ }}-empty-volume
+        {{- if $.Values.cdr.enabled }}
+          - mountPath: {{ $.Values.cdr.basePath }}
+            name: chf-cdr-pvc
+        {{- end }}
         #   - mountPath: {{ .volume.certmount }}
         #     name: {{ include "chf.fullname" $ }}-cert-pvc
         resources:
@@ -95,6 +103,11 @@ spec:
                 name: {{ include "chf.fullname" $ }}-configmap
         - name: {{ include "chf.fullname" $ }}-empty-volume
           emptyDir: {}
+      {{- if $.Values.cdr.enabled }}
+        - name: chf-cdr-pvc
+          persistentVolumeClaim:
+             claimName: {{ include "chf.cdr.pvcName" $ }}
+      {{- end }}       
         # - name: {{ include "chf.fullname" $ }}-cert-pvc
         #   persistentVolumeClaim:
         #     claimName: cert-pvc

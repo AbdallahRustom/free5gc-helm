@@ -1,0 +1,78 @@
+{{- if and .Values.cdr.enabled .Values.cdr.uploader.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "chf.fullname" . }}-cdr-uploader
+  labels:
+    {{- include "chf.labels" . | nindent 4 }}
+    app.kubernetes.io/component: cdr
+spec:
+  schedule: {{ .Values.cdr.uploader.schedule | quote }}
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 120
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0      
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: uploader
+              image: {{ .Values.cdr.uploader.image.repository }}:{{ .Values.cdr.uploader.image.tag }}
+              imagePullPolicy: {{ .Values.cdr.uploader.image.pullPolicy }}
+              command: ["/bin/sh", "-c"]
+              args:
+                - apk add --no-cache zip openssh-client sshpass bash && exec bash -x /scripts/uploader.sh
+              env:
+                - name: CDR_BASE
+                  value: {{ .Values.cdr.basePath | quote }}
+                - name: MIN_SIZE_BYTES
+                  value: {{ .Values.cdr.uploader.minSizeBytes | quote }}
+                - name: MIN_AGE_SECS
+                  value: {{ .Values.cdr.uploader.minAgeSeconds | quote }}
+                - name: QUIET_SECS
+                  value: {{ .Values.cdr.uploader.quietSeconds | quote }}
+                - name: SFTP_HOST
+                  value: {{ .Values.cdr.uploader.sftp.host | quote }}
+                - name: SFTP_PORT
+                  value: {{ .Values.cdr.uploader.sftp.port | quote }}
+                - name: SFTP_REMOTE_DIR
+                  value: {{ .Values.cdr.uploader.sftp.remoteDir | quote }}
+                - name: SFTP_USER
+                  value: {{ .Values.cdr.uploader.sftp.username | quote }}
+                - name: SFTP_PRIVATE_KEY
+                  value: /secrets/id_ed25519
+                # - name: SFTP_USER
+                #   valueFrom:
+                #     secretKeyRef:
+                #       name: {{ include "chf.cdr.secretName" . }}
+                #       key: sftp_user  
+                # - name: SFTP_PASS
+                #   valueFrom:
+                #     secretKeyRef:
+                #       name: {{ include "chf.cdr.secretName" . }}
+                #       key: sftp_pass
+              volumeMounts:
+                - name: cdr
+                  mountPath: {{ .Values.cdr.basePath }}
+                - name: sftp-secrets
+                  mountPath: /secrets
+                  readOnly: true
+                - name: scripts
+                  mountPath: /scripts
+                  readOnly: true
+          volumes:
+            - name: cdr
+              persistentVolumeClaim:
+                claimName: {{ include "chf.cdr.pvcName" . }}
+            - name: sftp-secrets
+              secret:
+                secretName: {{ include "chf.cdr.secretName" . }}
+                defaultMode: 0400
+            - name: scripts
+              configMap:
+                name: {{ include "chf.cdr.uploaderConfigMapName" . }}
+                defaultMode: 0555
+{{- end }}

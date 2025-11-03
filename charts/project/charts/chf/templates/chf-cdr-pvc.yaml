@@ -1,0 +1,18 @@
+{{- if and .Values.cdr.enabled .Values.cdr.pvc.create }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "chf.cdr.pvcName" . }}
+  labels:
+    {{- include "chf.labels" . | nindent 4 }}
+    app.kubernetes.io/component: cdr
+spec:
+  accessModes:
+  {{- range .Values.cdr.pvc.accessModes }}
+    - {{ . }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.cdr.pvc.size }}
+  storageClassName: {{ .Values.cdr.pvc.storageClassName | quote }}
+{{- end }}
