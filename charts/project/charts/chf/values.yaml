@@ -38,7 +38,7 @@ chf:
   replicaCount: 1
   image:
     name: myregistrydomain.com:5000/chf-nsf
-    tag: 9
+    tag: 12
     pullPolicy: Always
   # environment: 
   #   - name: CDR_DIR
@@ -49,9 +49,9 @@ chf:
   configmap:
     name: chf-configmap
   volume:
-    mount: /free5gc/config/
-    tlsmount: /free5gc/config/TLS
-    certmount: /free5gc/nrf-cert
+    mount: /chf/config/
+    tlsmount: /chf/config/TLS
+    certmount: /chf/nrf-cert
     # cdrmount: /data/cdr/
   podAnnotations: {}
     # additional annotations
@@ -104,7 +104,7 @@ chf:
       enable: false # (Optional, default false)
       scheme: http # (Required) the protocol for metrics (http or https, default https)
       port: 9091 # (Optional, default 9091) port used to bind the service
-      namespace: free5gc # (Optional, default free5gc)
+      namespace: ns-chf
 
     logger: # log output setting
       enable: true # true or false
@@ -154,8 +154,8 @@ cdr:
     minAgeSeconds: "0"         # 5 minutes
     quietSeconds: "30"           # 30 seconds
     image:
-      repository: alpine
-      tag: "3.20"
+      repository: "myregistrydomain.com:5000/chf-nsf-uploader"
+      tag: "1"
       pullPolicy: IfNotPresent
     sftp:
       host: 10.0.20.42  

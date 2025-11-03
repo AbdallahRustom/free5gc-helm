@@ -71,15 +71,15 @@ data:
         hostIPv4: 0.0.0.0
         port: 3868
         tls:
-          pem: ./cert/chf.pem
-          key: ./cert/chf.key
+          pem: ""
+          key: ""
       rfDiameter:
         protocol: tcp
         hostIPv4: 0.0.0.0
         port: 3869
         tls:
-          pem: ./cert/chf.pem # CHF TLS Certificate
-          key: ./cert/chf.key # CHF TLS Private key
+          pem: "" # CHF TLS Certificate
+          key: "" # CHF TLS Private key
       plmnSupportList: # the PLMNs (Public land mobile network) list supported by this AMF
         {{- toYaml .configuration.plmnSupportList | nindent 8 }}
     logger: # log output setting

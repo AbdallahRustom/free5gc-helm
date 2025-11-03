@@ -24,7 +24,7 @@ spec:
               imagePullPolicy: {{ .Values.cdr.uploader.image.pullPolicy }}
               command: ["/bin/sh", "-c"]
               args:
-                - apk add --no-cache zip openssh-client sshpass bash && exec bash -x /scripts/uploader.sh
+                - exec bash -x /scripts/uploader.sh
               env:
                 - name: CDR_BASE
                   value: {{ .Values.cdr.basePath | quote }}
