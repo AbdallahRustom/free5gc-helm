@@ -1,0 +1,12 @@
+{{- if and .Values.cdr.enabled .Values.cdr.cleanup.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "chf.fullname" . }}-cdr-cleanup
+  labels:
+    {{- include "chf.labels" . | nindent 4 }}
+    app.kubernetes.io/component: cdr
+data:
+  cleanup.sh: |-
+{{ (.Files.Get "files/cleanup.sh") | nindent 4 }}
+{{- end }}

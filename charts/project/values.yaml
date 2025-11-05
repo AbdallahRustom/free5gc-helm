@@ -26,9 +26,9 @@ global:
 
 
 # These parameters can be used to enable/disable deployment of subcharts
-deployMongoDb: true
+deployMongoDb: false
 deployChf: true
-deployWebui: true
+deployWebui: false
 
 
 # This section can be used to override the default values in the MongoDB chart

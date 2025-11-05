@@ -38,7 +38,7 @@ chf:
   replicaCount: 1
   image:
     name: myregistrydomain.com:5000/chf-nsf
-    tag: 12
+    tag: 13
     pullPolicy: Always
   # environment: 
   #   - name: CDR_DIR
@@ -57,7 +57,10 @@ chf:
     # additional annotations
   imagePullSecrets: []
   podSecurityContext: {}
-  securityContext: {}
+  securityContext: 
+    runAsUser: 0
+    runAsGroup: 0
+    allowPrivilegeEscalation: true
   resources:
     requests:
       cpu: 100m
@@ -168,3 +171,15 @@ cdr:
       # # knownHosts: |-
       # #  
         privatekey: ""
+    
+    cleanup:
+    enabled: true
+    schedule: "0 17 * * 1"
+    # Optional: set if your Kubernetes supports time zones (K8s 1.27+)
+    timeZone: ""  
+    sentDir: "/data/cdr/sent"
+    onlyOlderThanDays: 7
+    image:
+      repository: "myregistrydomain.com:5000/chf-nsf-uploader"
+      tag: "1"
+      pullPolicy: IfNotPresent
