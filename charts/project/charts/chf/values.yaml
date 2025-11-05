@@ -56,6 +56,7 @@ chf:
   podAnnotations: {}
     # additional annotations
   imagePullSecrets: []
+    - name: my-private-registry-secret
   podSecurityContext: {}
   securityContext: 
     runAsUser: 0
@@ -160,6 +161,8 @@ cdr:
       repository: "myregistrydomain.com:5000/chf-nsf-uploader"
       tag: "1"
       pullPolicy: IfNotPresent
+    imagePullSecrets:
+      - name: my-private-registry-secret
     sftp:
       host: 10.0.20.42  
       port: 8654
@@ -183,3 +186,5 @@ cdr:
       repository: "myregistrydomain.com:5000/chf-nsf-uploader"
       tag: "1"
       pullPolicy: IfNotPresent
+    imagePullSecrets:
+      - name: my-private-registry-secret

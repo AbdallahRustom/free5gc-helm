@@ -41,4 +41,8 @@ spec:
             - name: cdr-data
               persistentVolumeClaim:
                 claimName: {{ include "chf.cdr.pvcName" . }}
+          {{- with .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
 {{- end }}
