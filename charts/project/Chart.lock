@@ -1,0 +1,12 @@
+dependencies:
+- name: mongodb
+  repository: https://charts.bitnami.com/bitnami
+  version: 18.1.1
+- name: chf
+  repository: file://charts/chf
+  version: 0.1.6
+- name: webui
+  repository: file://charts/webui
+  version: 0.1.5
+digest: sha256:53382e1fcc8ae7412190f2e6c997db7d330a6726dfa6b4348278d587c7461ea0
+generated: "2025-11-14T09:45:28.793113741Z"

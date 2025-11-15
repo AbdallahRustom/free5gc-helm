@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ include "chf.cdr.pvcName" . }}
+  name: {{ include "chf.cdr.pvcCreateName" . }}
   labels:
     {{- include "chf.labels" . | nindent 4 }}
     app.kubernetes.io/component: cdr

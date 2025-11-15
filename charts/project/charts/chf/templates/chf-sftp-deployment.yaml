@@ -1,0 +1,68 @@
+{{- if .Values.sftp.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "chf.fullname" . }}-cdr-sftp
+  labels:
+    app.kubernetes.io/name: sftp
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: sftp
+spec:
+  replicas: {{ default 1 .Values.sftp.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sftp
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: sftp
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: sftp
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: sftp
+      {{- if .Values.sftp.networksAnnotation }}
+      annotations:
+        k8s.v1.cni.cncf.io/networks: {{ .Values.sftp.networksAnnotation | quote }}
+      {{- end }}
+    spec:
+      {{- if .Values.sftp.imagePullSecrets }}
+      imagePullSecrets:
+      {{- range .Values.sftp.imagePullSecrets }}
+        - name: {{ . }}
+      {{- end }}
+      {{- end }}
+      securityContext:
+        fsGroup: {{ .Values.sftp.securityContext.fsGroup }}
+      containers:
+        - name: sftp
+          image: "{{ .Values.sftp.image.repository }}:{{ .Values.sftp.image.tag }}"
+          imagePullPolicy: {{ .Values.sftp.image.pullPolicy }}
+          securityContext:
+            runAsUser: {{ .Values.sftp.securityContext.runAsUser }}
+            runAsGroup: {{ .Values.sftp.securityContext.runAsGroup }}
+            runAsNonRoot: {{ .Values.sftp.securityContext.runAsNonRoot }}
+            allowPrivilegeEscalation: false
+          ports:
+            - name: sftp
+              containerPort: {{ .Values.sftp.port }}
+              protocol: TCP
+          volumeMounts:
+            - name: cdr-data
+              mountPath: /home/sftpuser/data
+              readOnly: false
+            # Mount the Secret as /authorized_keys (your entrypoint copies it)
+            - name: ssh-keys
+              mountPath: /authorized_keys
+              subPath: authorized_keys
+              readOnly: true
+          resources:
+            {{- toYaml .Values.sftp.resources | nindent 12 | default "" }}
+      volumes:
+        - name: cdr-data
+          persistentVolumeClaim:
+            claimName: {{ include "chf.cdr.pvcName" . }}
+        - name: ssh-keys
+          secret:
+            secretName: {{ include "chf.fullname" . }}-sftp-ssh-key
+            defaultMode: 0400
+{{- end }}

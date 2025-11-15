@@ -64,10 +64,19 @@ CHF Pod Annotations
 {{- end }}
 {{- end }}
 
-{{/* CDR resource names */}}
-{{- define "chf.cdr.pvcName" -}}
+{{/* Name to use when creating the PVC (if create=true) */}}
+{{- define "chf.cdr.pvcCreateName" -}}
 {{- default (printf "%s-cdr-pvc" (include "chf.fullname" .)) .Values.cdr.pvc.name -}}
-{{- end }}
+{{- end -}}
+
+{{/* Name to reference from consumers (Deployment, Jobs, etc.) */}}
+{{- define "chf.cdr.pvcName" -}}
+{{- if and .Values.cdr.pvc .Values.cdr.pvc.existingClaim -}}
+{{- .Values.cdr.pvc.existingClaim -}}
+{{- else -}}
+{{- include "chf.cdr.pvcCreateName" . -}}
+{{- end -}}
+{{- end -}}
 
 {{- define "chf.cdr.secretName" -}}
 {{- printf "%s-sftp" (include "chf.fullname" .) -}}

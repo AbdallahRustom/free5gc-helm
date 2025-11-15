@@ -5,7 +5,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: pod-{{ .name }}
+  name: {{ .name }}
   labels:
     {{- include "chf.labels" $ | nindent 4 }}
     project: {{ $.Values.global.projectName }}
@@ -71,7 +71,7 @@ spec:
             value: release
         {{- if $.Values.cdr.enabled }}
           - name: CDR_DIR
-            value: {{ $.Values.cdr.writerDir | quote }}
+            value: {{ $.Values.cdr.basePath | quote }}
         {{- end }}
         volumeMounts:
           - mountPath: {{ .volume.mount }}

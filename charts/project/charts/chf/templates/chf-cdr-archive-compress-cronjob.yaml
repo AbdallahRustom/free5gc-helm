@@ -1,0 +1,65 @@
+{{- if and .Values.cdr.enabled .Values.cdr.archiveJobs.compress.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "chf.fullname" . }}-cdr-archive-compress
+  labels:
+    {{- include "chf.labels" . | nindent 4 }}
+    app.kubernetes.io/component: cdr-archive-compress
+spec:
+  schedule: {{ .Values.cdr.archiveJobs.compress.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  {{- if .Values.cdr.archiveJobs.compress.timeZone }}
+  timeZone: {{ .Values.cdr.archiveJobs.compress.timeZone | quote }}
+  {{- end }}
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            {{- include "chf.selectorLabels" . | nindent 12 }}
+            app.kubernetes.io/component: cdr-archive-compress
+        spec:
+          restartPolicy: OnFailure
+          {{- if .Values.cdr.archiveJobs.compress.imagePullSecrets }}
+          imagePullSecrets:
+          {{- range .Values.cdr.archiveJobs.compress.imagePullSecrets }}
+            - name: {{ . }}
+          {{- end }}
+          {{- end }}
+          securityContext:
+            fsGroup: {{ .Values.cdr.archiveJobs.compress.securityContext.fsGroup }}
+          volumes:
+            - name: cdr-data
+              persistentVolumeClaim:
+                claimName: {{ include "chf.cdr.pvcName" . }}
+            - name: archive-compress-script
+              configMap:
+                name: {{ include "chf.fullname" . }}-cdr-archive-compress-script
+                defaultMode: 0755
+          containers:
+            - name: compressor
+              image: "{{ .Values.cdr.archiveJobs.compress.image.repository }}:{{ .Values.cdr.archiveJobs.compress.image.tag }}"
+              imagePullPolicy: {{ .Values.cdr.archiveJobs.compress.imagePullPolicy | default "IfNotPresent" | quote }}
+              env:
+                - name: ARCHIVE_DIR
+                  value: {{ printf "%s/archive" .Values.cdr.basePath | quote }}
+              volumeMounts:
+                - name: cdr-data
+                  mountPath: /data
+                - name: archive-compress-script
+                  mountPath: /scripts/archive-compress.sh
+                  subPath: archive-compress.sh
+                  readOnly: true
+              securityContext:
+                runAsNonRoot: {{ .Values.cdr.archiveJobs.compress.securityContext.runAsNonRoot }}
+                runAsUser: {{ .Values.cdr.archiveJobs.compress.securityContext.runAsUser }}
+                runAsGroup: {{ .Values.cdr.archiveJobs.compress.securityContext.runAsGroup }}
+                allowPrivilegeEscalation: false
+              command: ["/bin/sh", "-c"]
+              args: ["/scripts/archive-compress.sh"]
+              resources:
+                {{- toYaml .Values.cdr.archiveJobs.compress.resources | nindent 16 }}
+{{- end }}

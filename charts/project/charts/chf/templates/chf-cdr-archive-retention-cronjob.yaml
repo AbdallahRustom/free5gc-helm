@@ -1,0 +1,67 @@
+{{- if and .Values.cdr.enabled .Values.cdr.archiveJobs.retention.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "chf.fullname" . }}-cdr-archive-retention
+  labels:
+    {{- include "chf.labels" . | nindent 4 }}
+    app.kubernetes.io/component: cdr-archive-retention
+spec:
+  schedule: {{ .Values.cdr.archiveJobs.retention.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  {{- if .Values.cdr.archiveJobs.retention.timeZone }}
+  timeZone: {{ .Values.cdr.archiveJobs.retention.timeZone | quote }}
+  {{- end }}
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            {{- include "chf.selectorLabels" . | nindent 12 }}
+            app.kubernetes.io/component: cdr-archive-retention
+        spec:
+          restartPolicy: OnFailure
+          {{- if .Values.cdr.archiveJobs.retention.imagePullSecrets }}
+          imagePullSecrets:
+          {{- range .Values.cdr.archiveJobs.retention.imagePullSecrets }}
+            - name: {{ . }}
+          {{- end }}
+          {{- end }}
+          securityContext:
+            fsGroup: {{ .Values.cdr.archiveJobs.retention.securityContext.fsGroup }}
+          volumes:
+            - name: cdr-data
+              persistentVolumeClaim:
+                claimName: {{ include "chf.cdr.pvcName" . }}
+            - name: retention-cleanup-script
+              configMap:
+                name: {{ include "chf.fullname" . }}-cdr-archive-retention-script
+                defaultMode: 0755
+          containers:
+            - name: retention
+              image: "{{ .Values.cdr.archiveJobs.retention.image.repository }}:{{ .Values.cdr.archiveJobs.retention.image.tag }}"
+              imagePullPolicy: {{ .Values.cdr.archiveJobs.retention.imagePullPolicy | default "IfNotPresent" | quote }}
+              env:
+                - name: ARCHIVE_DIR
+                  value: {{ printf "%s/archive" .Values.cdr.basePath | quote }}
+                - name: KEEP_DAYS
+                  value: {{ .Values.cdr.archiveJobs.retention.keepDays | default 7 | quote }}
+              volumeMounts:
+                - name: cdr-data
+                  mountPath: /data
+                - name: retention-cleanup-script
+                  mountPath: /scripts/retention-cleanup.sh
+                  subPath: retention-cleanup.sh
+                  readOnly: true
+              securityContext:
+                runAsNonRoot: {{ .Values.cdr.archiveJobs.retention.securityContext.runAsNonRoot }}
+                runAsUser: {{ .Values.cdr.archiveJobs.retention.securityContext.runAsUser }}
+                runAsGroup: {{ .Values.cdr.archiveJobs.retention.securityContext.runAsGroup }}
+                allowPrivilegeEscalation: false
+              command: ["/bin/sh", "-c"]
+              args: ["/scripts/retention-cleanup.sh"]
+              resources:
+                {{- toYaml .Values.cdr.archiveJobs.retention.resources | nindent 16 }}
+{{- end }}

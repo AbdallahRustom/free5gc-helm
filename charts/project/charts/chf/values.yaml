@@ -8,7 +8,7 @@ global:
   projectName: chf
   nrf:
     service:
-      name: service-enterprise1-slice1-nfmanagement.ns-enterprise1.svc.cluster.local
+      name: service-enterprise1-slice1-nfmanagement.ns-enterprise1.svc.cluster.local #change namespace
       type: ClusterIP
       port: "8080"
       mutalTls: false
@@ -38,11 +38,8 @@ chf:
   replicaCount: 1
   image:
     name: myregistrydomain.com:5000/chf-nsf
-    tag: 13
+    tag: 21
     pullPolicy: Always
-  # environment: 
-  #   - name: CDR_DIR
-  #     value: /data/cdr/incoming
   service:
     type: ClusterIP
     port: 8080
@@ -52,16 +49,17 @@ chf:
     mount: /chf/config/
     tlsmount: /chf/config/TLS
     certmount: /chf/nrf-cert
-    # cdrmount: /data/cdr/
   podAnnotations: {}
     # additional annotations
-  imagePullSecrets: []
+  imagePullSecrets:
     - name: my-private-registry-secret
-  podSecurityContext: {}
-  securityContext: 
-    runAsUser: 0
-    runAsGroup: 0
-    allowPrivilegeEscalation: true
+  podSecurityContext: 
+    fsGroup: 1000
+  securityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    runAsNonRoot: 
+    allowPrivilegeEscalation: false
   resources:
     requests:
       cpu: 100m
@@ -137,12 +135,40 @@ initcontainers:
     image: busybox
     tag: "1.32.0"
 
+sftp:
+  enabled: true
+  # Image built from your Dockerfile (contains dropbear + entrypoint)
+  image:
+    repository: myregistrydomain.com:5000/chf-sftp
+    tag: v1
+    pullPolicy: Always
+  imagePullSecrets:
+    - my-private-registry-secret
+  replicas: 1
+  port: 2222
+  # Attach Multus NAD (string). Examples:
+  # "nad-sftp" or '[{"name":"nad-sftp","interface":"net1"}]'
+  networksAnnotation: '[{"name": "nad-sftp", "interface": "net1", "ips": ["192.168.1.27/24"]}]'
+  # Use the SAME CephFS PVC that CHF uses
+  securityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    runAsNonRoot: true
+  # RAFT client public key(s)
+  authorizedKeys: |
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
 
 cdr:
   enabled: true
   basePath: /data/cdr
-  writerDir: /data/cdr/incoming
-
+  # writerDir: /data/cdr/current
   pvc:
     create: true
     name: ""                   # auto-name via helper
@@ -150,41 +176,49 @@ cdr:
     size: 20Gi
     accessModes:
       - ReadWriteMany
-
-  uploader:
-    enabled: true
-    schedule: "*/5 * * * *"
-    minSizeBytes: "5242880"      # 5 MB
-    minAgeSeconds: "0"         # 5 minutes
-    quietSeconds: "30"           # 30 seconds
-    image:
-      repository: "myregistrydomain.com:5000/chf-nsf-uploader"
-      tag: "1"
-      pullPolicy: IfNotPresent
-    imagePullSecrets:
-      - name: my-private-registry-secret
-    sftp:
-      host: 10.0.20.42  
-      port: 8654
-      remoteDir: /incoming/cdr
-      username: test 
-      auth:
-      #   username: test        
-      # #   password:    
-      # # knownHosts: |-
-      # #  
-        privatekey: ""
-    
-    cleanup:
-    enabled: true
-    schedule: "0 17 * * 1"
-    # Optional: set if your Kubernetes supports time zones (K8s 1.27+)
-    timeZone: ""  
-    sentDir: "/data/cdr/sent"
-    onlyOlderThanDays: 7
-    image:
-      repository: "myregistrydomain.com:5000/chf-nsf-uploader"
-      tag: "1"
-      pullPolicy: IfNotPresent
-    imagePullSecrets:
-      - name: my-private-registry-secret
+  archiveJobs:
+    compress:
+      enabled: true
+      schedule: "0 * * * *"     # every hour
+      timeZone: ""              # optional; requires K8s >= 1.27 (e.g., "UTC" or "Africa/Casablanca")
+      image:
+        repository: myregistrydomain.com:5000/alpine
+        tag: "3.20"
+        pullPolicy: Always
+      imagePullSecrets:
+        - my-private-registry-secret
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        runAsNonRoot: true
+    retention:
+      enabled: true
+      schedule: "0 3 * * 0"     # Sundays at 03:00
+      timeZone: ""              # optional; requires K8s >= 1.27
+      keepDays: 7               # delete .csv.gz older than 7 days
+      image:
+        repository: myregistrydomain.com:5000/alpine
+        tag: "3.20"
+        pullPolicy: Always
+      imagePullSecrets:
+        - my-private-registry-secret
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        runAsNonRoot: true

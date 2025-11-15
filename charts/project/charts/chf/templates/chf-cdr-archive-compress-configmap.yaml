@@ -1,0 +1,12 @@
+{{- if and .Values.cdr.enabled .Values.cdr.archiveJobs.compress.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "chf.fullname" . }}-cdr-archive-compress-script
+  labels:
+    {{- include "chf.labels" . | nindent 4 }}
+    app.kubernetes.io/component: cdr-archive-compress
+data:
+  archive-compress.sh: |-
+{{ .Files.Get "files/archive-compress.sh" | nindent 4 }}
+{{- end }}
