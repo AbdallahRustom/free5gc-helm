@@ -50,7 +50,7 @@ spec:
                   value: {{ .Values.cdr.archiveJobs.retention.keepDays | default 7 | quote }}
               volumeMounts:
                 - name: cdr-data
-                  mountPath: /data
+                  mountPath: {{ .Values.cdr.basePath }}
                 - name: retention-cleanup-script
                   mountPath: /scripts/retention-cleanup.sh
                   subPath: retention-cleanup.sh

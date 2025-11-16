@@ -168,7 +168,6 @@ sftp:
 cdr:
   enabled: true
   basePath: /data/cdr
-  # writerDir: /data/cdr/current
   pvc:
     create: true
     name: ""                   # auto-name via helper

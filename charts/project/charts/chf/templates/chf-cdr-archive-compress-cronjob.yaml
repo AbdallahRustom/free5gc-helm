@@ -48,7 +48,7 @@ spec:
                   value: {{ printf "%s/archive" .Values.cdr.basePath | quote }}
               volumeMounts:
                 - name: cdr-data
-                  mountPath: /data
+                  mountPath: {{ .Values.cdr.basePath }}
                 - name: archive-compress-script
                   mountPath: /scripts/archive-compress.sh
                   subPath: archive-compress.sh
