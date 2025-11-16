@@ -138,6 +138,7 @@ initcontainers:
 sftp:
   enabled: true
   # Image built from your Dockerfile (contains dropbear + entrypoint)
+  exportSubPath : export
   image:
     repository: myregistrydomain.com:5000/chf-sftp
     tag: v1

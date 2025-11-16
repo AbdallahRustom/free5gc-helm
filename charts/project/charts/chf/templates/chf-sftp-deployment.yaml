@@ -48,7 +48,8 @@ spec:
               protocol: TCP
           volumeMounts:
             - name: cdr-data
-              mountPath: /home/sftpuser/{{ .Values.cdr.basePath }}
+              mountPath: /home/sftpuser/{{ .Values.cdr.basePath }}/{{ .Values.sftp.exportSubPath}}
+              subPath: {{ .Values.sftp.exportSubPath | default "export" | quote }}
               readOnly: false
             # Mount the Secret as /authorized_keys (your entrypoint copies it)
             - name: ssh-keys
